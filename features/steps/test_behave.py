@@ -92,17 +92,24 @@ def then_package_state(context, pkg, state):
   assert removed != None and installed != None
   
   for n in split(pkg):
+    c = True
     if state == 'installed':
-      assert ('+' + n) in installed
+      c = ('+' + n) in installed
       installed.remove('+' + n)
     if state == 'removed':
-      assert ('-' + n) in removed
+      c = ('-' + n) in removed
       removed.remove('-' + n)
     if state == 'absent':
-      assert ('+' + n) not in installed
-      assert ('-' + n) not in removed
+      c = ('+' + n) not in installed
+      if c:
+        c = ('-' + n) not in removed
+    if not c:
+      raise Exception("Error '{0}' NOT '{1}'".format(n, state))
 
   ''' This checks that installations/removals are always fully specified,
   so that we always cover the requirements/expecations entirely '''
   if state != 'absent':
-    assert not installed and not removed
+    if installed:
+      raise Exception("Error '{0}' NOT IN installed".format(', '.join(installed)))
+    if removed:
+      raise Exception("Error '{0}' NOT IN removed".format(', '.join(removed)))
