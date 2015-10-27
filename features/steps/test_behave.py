@@ -41,7 +41,7 @@ def diff_package_lists(a, b):
 def execute_dnf_command(cmd, reponame):
   " Execute DNF command with default flags and the specified `reponame` enabled "
   flags = DNF_FLAGS + ['--enablerepo={0}'.format(reponame)]
-  return subprocess.check_call(['dnf'] + flags + cmd, stdout=subprocess.PIPE)
+  return subprocess.call(['dnf'] + flags + cmd, stdout=subprocess.PIPE)
 
 def execute_rpm_command(pkg, action):
   " Execute given action over specified pkg(s) "
@@ -52,7 +52,7 @@ def execute_rpm_command(pkg, action):
   elif action == "install":
     action = RPM_INSTALL_FLAGS
     pkg = decorate_rpm_packages(pkg)
-  return subprocess.check_call(['rpm'] + action + pkg, stdout=subprocess.PIPE)
+  return subprocess.call(['rpm'] + action + pkg, stdout=subprocess.PIPE)
 
 def piecewise_compare(a, b):
   " Check if the two sequences are identical regardless of ordering "
@@ -67,7 +67,7 @@ def given_repo_condition(context, repo):
   assert repo
   assert os.path.exists('/build/' + repo)
   a = [os.remove(p) for p in os.listdir('/repo')]
-  context.rc = subprocess.call(['cp -rs /build/' + repo + '/* /repo/'], shell=True)
+  subprocess.check_call(['cp -rs /build/' + repo + '/* /repo/'], shell=True)
 
 @when('I "{action}" a package "{pkg}" with "{manager}"')
 def when_action_package(context, action, pkg, manager):
@@ -78,9 +78,9 @@ def when_action_package(context, action, pkg, manager):
   assert context.pre_packages
 
   if manager == 'rpm':
-    execute_rpm_command(split(pkg), action)
+    context.rc = execute_rpm_command(split(pkg), action)
   elif manager == 'dnf':
-    execute_dnf_command([action] + split(pkg), 'test')
+    context.rc = execute_dnf_command([action] + split(pkg), 'test')
 
 def _handle_rc(context, rc, negate):
   if negate:
