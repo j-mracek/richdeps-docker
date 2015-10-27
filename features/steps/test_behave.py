@@ -67,7 +67,7 @@ def given_repo_condition(context, repo):
   assert repo
   assert os.path.exists('/build/' + repo)
   a = [os.remove(p) for p in os.listdir('/repo')]
-  subprocess.check_call(['cp -rs /build/' + repo + '/* /repo/'], shell=True)
+  context.rc = subprocess.call(['cp -rs /build/' + repo + '/* /repo/'], shell=True)
 
 @when('I "{action}" a package "{pkg}" with "{manager}"')
 def when_action_package(context, action, pkg, manager):
@@ -82,10 +82,24 @@ def when_action_package(context, action, pkg, manager):
   elif manager == 'dnf':
     execute_dnf_command([action] + split(pkg), 'test')
 
+def _handle_rc(context, rc, negate):
+  if negate:
+    return rc != context.rc
+  return rc == context.rc
+
+@then('the return code should be "{rc}"')
+def then_rc_is(context, rc):
+  assert _handle_rc(context, rc, False)
+
+@then('the return code should not be "{rc}"')
+def then_rc_is_not(context, rc):
+  assert _handle_rc(context, rc, True)
+
 @then('package "{pkg}" should be "{state}"')
 def then_package_state(context, pkg, state):
   assert state in ["installed", "removed", "absent"]
   assert pkg
+  assert context.rc = 0
   pkgs = get_package_list()
   assert pkgs
   removed, installed = diff_package_lists(context.pre_packages, pkgs)
