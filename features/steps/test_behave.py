@@ -99,7 +99,7 @@ def then_rc_is_not(context, rc):
 def then_package_state(context, pkg, state):
   assert state in ["installed", "removed", "absent"]
   assert pkg
-  assert context.rc = 0
+  assert context.rc == 0
   pkgs = get_package_list()
   assert pkgs
   removed, installed = diff_package_lists(context.pre_packages, pkgs)
